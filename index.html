@@ -1,0 +1,263 @@
+<!doctype html>
+<html ng-app="myApp">
+<head>
+                <meta charset="utf-8">
+    <title>NBA  DEMO</title>
+    <meta name="description" content="clipboard demo">
+    <meta name="keywords" content="HTML, CSS, JavaScript, Angular">
+    <meta name="author" content="Christian Crisologo">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet"  href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>      
+    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-resource.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.js"></script>
+    <script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.3.js"></script>         
+    </head>
+        <body>
+          <section class="container"  ng-controller="myCtrl">
+              <header><h2>NBA<h2> </header>
+                <!-- <div  ng-controller="DatepickerDemoCtrl">
+                        <p class="input-group">
+              <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="dt" is-open="status.opened" min-date="minDate" max-date="maxDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" />
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </p> -->
+                </div>
+                     <div class="input-prepend">
+                       <button type="button" ng-click="moveDate('back')" class="btn-warning btn" style="height:30px;"  >BACK</button>
+                       <!-- <input type="text" placeholder="Select Date" ng-model="inputSelectDate" /> -->
+                       <input type="date"  name="input" ng-model="selectedDate"
+                          placeholder="yyyy-MM-dd"  required style="height:30px;"  />
+                       <button type="button" ng-click="moveDate('next')" class="btn-warning btn" style="height:30px;" >NEXT</button>
+                    </div>
+                     <nba-game date-pick="{{formattedSelectedDate}}" title="GAMES RESULT"  ></nba-game> </section>
+                               
+                               
+                               
+ 
+                <script>
+                var app = angular.module('myApp',['ngResource', 'ngAnimate', 'ui.bootstrap'])
+                .controller('myCtrl',function($scope,$filter){
+                      //$scope.inputSelectDate = 
+                    
+                      $scope.selectedDate =  new Date();//.toISOString().substring(0, 10) ;
+                      //
+                      var formatDate= function(v){
+                          console.log(v.getYear() + " " + v.getMonth() + " " + v.getDay() ) ;
+                      };
+
+                      $scope.moveDate = function(v){
+                          var d = new Date($scope.selectedDate);
+                          if(v=='next'){
+                              d.setDate(d.getDate() + 1);
+                          }else{
+                              d.setDate(d.getDate() -1 );
+                          }
+                          $scope.selectedDate = d;
+                      }
+
+                      $scope.loadSelectedDate = function(e){
+                            $scope.selectDate = $scope.inputSelectDate;
+                            console.log('loadSelectedDate = ' + $scope.selectDate);
+
+                     };
+
+                     $scope.$watch('selectedDate', function(newValue, oldValue) {
+                          $scope.formattedSelectedDate = $filter('date')($scope.selectedDate, 'yyyyMMdd');
+                          console.log('watch filter = ' + $scope.formattedSelectedDate);
+                      });
+
+                     // formatDate($scope.inputSelectDate);
+                                     
+                })
+                .directive('nbaGame',function(){
+                      return {
+                                      restrict: 'AE',
+                                      replace: true,
+                                      /*require: '?ngModel', */
+                                      /*transclude: true,*/
+                                      scope:{title:'@',option:'=',datePick:"@"},
+                                      controller: ['$scope','GetGameResult',  function($scope,GetGameResult) {
+                                     
+                                      $scope.games = [];
+                                                      $scope.baseUrl = "http://www.nba.com";
+                                                      $scope.gameLine = "http://www.nba.com/gameline";
+                                                      $scope.teamImageUrl = "http://i.cdn.turner.com/nba/nba/.element/img/2.0/sect/gameline/teams/";
+
+                                $scope.parseFeed = function(e){
+                                        console.log('feedGame = ' + e );
+                                        GetGameResult.get({date:e},function(response){
+                                          console.log('GetGameResult get ' + response.sports_content.games);
+                                          $scope.games = response.sports_content.games.game; 
+                                       });
+                                
+                              }
+                             
+                      }],
+                      template: '<div >'
+                                          +'            <div class="row-fluid"> '
+                          + '<h4>{{title}}</h4>'
+                                          + '<div class="row-fluid">'
+                          + '<div class="input-prepend" ng-show="games.length > 0">'
+                          + '<span class="add-on" style="height:30px;" ><i class="icon-search"></i></span>'
+                          + '<input class="span12" type="text" placeholder="Search" data-ng-model="filterText" />'
+
+                          + '</div>'
+                          + ' <div style="display:block;width:100px" class="badge badge-warning" ng-show="games.length > 0"> result found {{(games | filter:filterText).length}} </div>'
+                                          + '<table  class="table table-striped" > <tbody>'
+                                      //+ '<ul class="unstyled">'                                              
+                                      + '<tr ng-repeat="game in games | filter:filterText">  <td> '
+                          + '<h5>{{game.home.nickname}}({{game.home.score}}) vs  {{game.visitor.nickname}}({{game.visitor.score}})</h5>   '
+                          + '<img src="{{getTeamAvatarUrl(game.home.abbreviation)}}" width="34" height="22" title="{{getTeamFullName(game.home)}}"> '
+                          + '{{getTeamFullName(game.home)}} <b> ({{game.home.score}} </b>) <small> VS </small> '
+                                                                                          + ' <img src="{{getTeamAvatarUrl(game.visitor.abbreviation)}}" width="34" height="22" title="{{getTeamFullName(game.visitor)}}"> '
+                          + '{{getTeamFullName(game.visitor)}} (<b> {{game.visitor.score}} </b>)'
+                          + '<p><i><a href="{{getGameUrl(game.game_url)}}" target="_blank" > find out more </a></i></p>   '                   
+                          + '<p class="text-left"></p>   '
+                          + '<span class="small">{{feed.publishedDate}}</span>'
+                          + '</td></tr>'
+                          + '</tbody></table>'
+                                      //+ '</li>  '            
+                                      //+ '</ul>  '         
+                                                      + '</div>'
+                                                                      + '</div>',
+
+                       link: function(scope, elem, attrs) {                                                
+                                     
+                              scope.loadFeed=function(e){
+                                    console.log("select date = " + scope.datePick);
+                                    scope.parseFeed(scope.datePick);
+                              }                                               
+
+                              scope.getGameUrl = function(v){
+                                              return scope.baseUrl + "/games/" + v + "/gameinfo.html";
+                              }
+
+                              scope.getTeamFullName = function(v){
+                                              return v.city + " " + v.nickname;
+                              }
+
+                              scope.getTeamAvatarUrl = function(v){
+                                              return scope.teamImageUrl + v + ".gif";
+                              }
+
+
+                              elem.bind("keydown keypress", function (event) {
+                                    if(event.which === 13) {
+                                        scope.$apply(function (){
+                                           scope.loadFeed();
+                                        });
+
+                                        event.preventDefault();
+                                    }
+                              });
+      
+                              attrs.$observe('datePick', function(v) {
+                                  console.log("date-pick  value = "+ v);
+                                  scope.loadFeed();
+
+                              });
+                               scope.loadFeed();
+                                     
+                      }
+
+                      };
+                })
+ 
+                .factory('GetGameResult',['$resource','$http',
+                                function($resource,$http){                        
+ 
+                console.log("url =" + " http://data.nba.com/data/1h/json/cms/noseason/scoreboard/:date/games.json");
+                                return  $resource("http://data.nba.com/data/1h/json/cms/noseason/scoreboard/:date/games.json");
+                                /*{
+                                        get : function(date){
+                                            return $http.get(url + date + "/games.json");
+                                        }
+                                                }*/
+                }]);
+ 
+ /*
+                .controller('DatepickerDemoCtrl', function ($scope) {
+                                  $scope.today = function() {
+                                    $scope.dt = new Date();
+                                  };
+                                  $scope.today();
+ 
+                                  $scope.clear = function () {
+                                    $scope.dt = null;
+                                  };
+ 
+                                  // Disable weekend selection
+                                  $scope.disabled = function(date, mode) {
+                                    return ( mode === 'day' && ( date.getDay() === 0 || date.getDay() === 6 ) );
+                                  };
+ 
+                                  $scope.toggleMin = function() {
+                                    $scope.minDate = $scope.minDate ? null : new Date();
+                                  };
+                                  $scope.toggleMin();
+                                  $scope.maxDate = new Date(2020, 5, 22);
+ 
+                                  $scope.open = function($event) {
+                                                console.log("open");
+                                    $scope.status.opened = true;
+                                  };
+ 
+                                  $scope.setDate = function(year, month, day) {
+                                    $scope.dt = new Date(year, month, day);
+                                  };
+ 
+                                  $scope.dateOptions = {
+                                    formatYear: 'yy',
+                                    startingDay: 1
+                                  };
+ 
+                                  $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+                                  $scope.format = $scope.formats[0];
+ 
+                                  $scope.status = {
+                                    opened: false
+                                  };
+ 
+                                  var tomorrow = new Date();
+                                  tomorrow.setDate(tomorrow.getDate() + 1);
+                                  var afterTomorrow = new Date();
+                                  afterTomorrow.setDate(tomorrow.getDate() + 2);
+                                  $scope.events =
+                                    [
+                                      {
+                                        date: tomorrow,
+                                        status: 'full'
+                                      },
+                                      {
+                                        date: afterTomorrow,
+                                        status: 'partially'
+                                      }
+                                    ];
+ 
+                                  $scope.getDayClass = function(date, mode) {
+                                    if (mode === 'day') {
+                                      var dayToCheck = new Date(date).setHours(0,0,0,0);
+ 
+                                      for (var i=0;i<$scope.events.length;i++){
+                                        var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
+ 
+                                        if (dayToCheck === currentDay) {
+                                          return $scope.events[i].status;
+                                        }
+                                      }
+                                    }
+ 
+                                    return '';
+                                  };
+                                });*/
+                                               
+ 
+ 
+                </script>
+                </body>
+               
+</html>

@@ -1,0 +1,25 @@
+<div >
+  <div class="row-fluid"> 
+      <h4>{{title}}</h4>
+  <div class="row-fluid">
+    <div class="input-prepend" ng-show="games.length > 0">
+        <span class="add-on" style="height:30px;" ><i class="icon-search"></i></span>
+        <input class="span12" type="text" placeholder="Search" data-ng-model="filterText" />
+  </div>
+   <div style="display:block;width:100px" class="badge badge-warning" ng-show="games.length > 0"> 
+            result found {{(games | filter:filterText).length}} </div>
+  <table  class="table table-striped" > 
+    <tbody>
+      <tr ng-repeat="game in games | filter:filterText">  <td> 
+      <h5>{{game.home.nickname}}({{game.home.score}}) vs  {{game.visitor.nickname}}({{game.visitor.score}})</h5> 
+      <img src="{{getTeamAvatarUrl(game.home.abbreviation)}}" width="34" height="22" title="{{getTeamFullName(game.home)}}"> 
+            {{getTeamFullName(game.home)}} <b> ({{game.home.score}} </b>) <small> VS </small> 
+       <img src="{{getTeamAvatarUrl(game.visitor.abbreviation)}}" width="34" height="22" title="{{getTeamFullName(game.visitor)}}"> 
+            {{getTeamFullName(game.visitor)}} (<b> {{game.visitor.score}} </b>)
+      <p><i><a href="{{getGameUrl(game.game_url)}}" target="_blank" > find out more </a></i></p>
+      <p class="text-left"></p>
+      <!-- <span class="small">{{feed.publishedDate}}</span>' -->
+      </td></tr>
+    </tbody>
+  </table>
+</div>
